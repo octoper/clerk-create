@@ -1,6 +1,6 @@
 {
   "name": "create-clerk-app",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "packageManager": "pnpm@10.2.1",
   "type": "module",
   "license": "MIT",
