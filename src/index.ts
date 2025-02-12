@@ -1,9 +1,12 @@
-import fs from 'node:fs'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import { cli } from 'cleye'
-import prompts from 'prompts'
 import { fileURLToPath } from 'node:url'
+import { cli } from 'cleye'
+import fsExists from 'fs.promises.exists'
+import prompts from 'prompts'
+import task from 'tasuku'
+import pc from 'picocolors'
 
 const cliArgV = cli({
   name: 'creact-clerk',
@@ -24,17 +27,14 @@ const cliArgV = cli({
 
 const cwd = process.cwd()
 
-type ColorFunc = (str: string | number) => string
 type Framework = {
   name: string
   display: string
-  color?: ColorFunc
   variants: FrameworkVariant[]
 }
 type FrameworkVariant = {
   name: string
   display: string
-  color?: ColorFunc
   customCommand?: string
 }
 
@@ -53,20 +53,21 @@ const FRAMEWORKS: Framework[] = [
       },
     ],
   },
+  // Add more templates
 ]
 
-function copy(src: string, dest: string) {
-  const stat = fs.statSync(src)
+async function copy(src: string, dest: string) {
+  const stat = await fs.stat(src)
   if (stat.isDirectory()) {
     copyDir(src, dest)
   } else {
-    fs.copyFileSync(src, dest)
+    await fs.copyFile(src, dest)
   }
 }
 
-function copyDir(srcDir: string, destDir: string) {
-  fs.mkdirSync(destDir, { recursive: true })
-  for (const file of fs.readdirSync(srcDir)) {
+async function copyDir(srcDir: string, destDir: string) {
+  await fs.mkdir(destDir, { recursive: true })
+  for (const file of await fs.readdir(srcDir)) {
     const srcFile = path.resolve(srcDir, file)
     const destFile = path.resolve(destDir, file)
     copy(srcFile, destFile)
@@ -89,15 +90,15 @@ async function init() {
   }
 
   let targetDir = argTargetDir || DEFAULT_DIR
-  const getProjectName = () => path.basename(path.resolve(targetDir))
+  let template = argTemplate || 'nextjs-app-router'
 
-  let result: prompts.Answers<'projectName' | 'framework' | 'variant'>
+  let result: prompts.Answers<'projectPath' | 'framework' | 'variant'>
 
   try {
     result = await prompts([
       {
         type: 'text',
-        name: 'projectName',
+        name: 'projectPath',
         message: 'Project path',
         initial: DEFAULT_DIR,
         onState: (state) => {
@@ -125,7 +126,7 @@ async function init() {
           }))
         },
       },
-      // Add package manager selection
+      // Add package manager selection and install dependencies
     ])
   } catch (error) {
     console.error(error)
@@ -134,39 +135,55 @@ async function init() {
 
   const { framework, variant } = result
 
-  const template = `${framework.name}-${variant.name}`
+  template = template || `${framework.name}-${variant.name}`
 
   const root = path.join(cwd, targetDir)
-
-  if (!fs.existsSync(root)) {
-    fs.mkdirSync(root, { recursive: true })
-  }
-
-  console.log(`Creating a new Clerk app in ${root}...`)
-
-  const templateDir = path.resolve(
-    fileURLToPath(import.meta.url),
-    '../..',
-    `templates/${template}`,
-  )
 
   const renameFiles: Record<string, string | undefined> = {
     _gitignore: '.gitignore',
   }
 
-  const write = (file: string, content?: string) => {
-    const targetPath = path.join(root, renameFiles[file] ?? file)
-    if (content) {
-      fs.writeFileSync(targetPath, content)
-    } else {
-      copy(path.join(templateDir, file), targetPath)
-    }
-  }
+  task(
+    `Start creating a new Clerk app in ${root}...`,
+    async ({ setTitle, setOutput }) => {
+      const rootExists = await fsExists(root)
 
-  const files = fs.readdirSync(templateDir)
-  for (const file of files) {
-    write(file)
-  }
+      setTitle(pc.bold('Initializing project...'))
+
+      if (!rootExists) {
+        await fs.mkdir(root, { recursive: true })
+      }
+
+      const templateDir = path.resolve(
+        fileURLToPath(import.meta.url),
+        '../..',
+        `templates/${template}`,
+      )
+
+      const write = async (file: string, content?: string) => {
+        const targetPath = path.join(root, renameFiles[file] ?? file)
+        if (content) {
+          await fs.writeFile(targetPath, content)
+        } else {
+          await copy(path.join(templateDir, file), targetPath)
+        }
+      }
+
+      const files = await fs.readdir(templateDir)
+      for (const file of files) {
+        await write(file)
+      }
+
+      setOutput(`
+Project ${framework.display} (${framework.variant}) with Clerk 🍪 created in ${targetDir} directory 🚀
+
+🔒 Next steps:
+
+${pc.green('$')}  cd ${targetDir}
+${pc.green('$')}  npm install
+`)
+    },
+  )
 }
 
 init().catch((error) => {
