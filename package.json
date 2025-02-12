@@ -1,6 +1,6 @@
 {
   "name": "create-clerk-app",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "packageManager": "pnpm@10.2.1",
   "type": "module",
   "license": "MIT",
@@ -52,7 +52,7 @@
     "vitest": "^3.0.5"
   },
   "engines": {
-    "node": ">=20.18.0"
+    "node": ">=20"
   },
   "prettier": "@sxzz/prettier-config"
 }
