@@ -4,9 +4,9 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { cli } from 'cleye'
 import fsExists from 'fs.promises.exists'
+import pc from 'picocolors'
 import prompts from 'prompts'
 import task from 'tasuku'
-import pc from 'picocolors'
 
 const cliArgV = cli({
   name: 'creact-clerk',
@@ -95,41 +95,48 @@ async function init() {
   let result: prompts.Answers<'projectPath' | 'framework' | 'variant'>
 
   try {
-    result = await prompts([
+    result = await prompts(
+      [
+        {
+          type: 'text',
+          name: 'projectPath',
+          message: 'Project path',
+          initial: DEFAULT_DIR,
+          onState: (state) => {
+            targetDir = formatTargetDir(state.value) || DEFAULT_DIR
+          },
+        },
+        {
+          type: 'select',
+          name: 'framework',
+          message: `Which framework do you want to use?`,
+          initial: 0,
+          choices: FRAMEWORKS.map((framework) => ({
+            title: framework.display,
+            value: framework,
+          })),
+        },
+        {
+          type: 'select',
+          name: 'variant',
+          message: 'Which variant do you want to use?',
+          choices: (prev: Framework) => {
+            return prev.variants.map((variant: FrameworkVariant) => ({
+              title: variant.display,
+              value: variant,
+            }))
+          },
+        },
+        // Add package manager selection and install dependencies
+      ],
       {
-        type: 'text',
-        name: 'projectPath',
-        message: 'Project path',
-        initial: DEFAULT_DIR,
-        onState: (state) => {
-          targetDir = formatTargetDir(state.value) || DEFAULT_DIR
+        onCancel: () => {
+          throw new Error(`${pc.red('✖')} Operation cancelled`)
         },
       },
-      {
-        type: 'select',
-        name: 'framework',
-        message: `Which framework do you want to use?`,
-        initial: 0,
-        choices: FRAMEWORKS.map((framework) => ({
-          title: framework.display,
-          value: framework,
-        })),
-      },
-      {
-        type: 'select',
-        name: 'variant',
-        message: 'Which variant do you want to use?',
-        choices: (prev: Framework) => {
-          return prev.variants.map((variant: FrameworkVariant) => ({
-            title: variant.display,
-            value: variant,
-          }))
-        },
-      },
-      // Add package manager selection and install dependencies
-    ])
-  } catch (error) {
-    console.error(error)
+    )
+  } catch (error: any) {
+    console.log(error.message)
     return
   }
 
