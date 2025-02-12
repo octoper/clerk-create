@@ -1,6 +1,6 @@
 {
   "name": "create-clerk-app",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "packageManager": "pnpm@10.2.1",
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,8 @@
   },
   "author": "Vaggelis Yfantis <hey@octoper.me>",
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "bin": {
     "create-clerk": "index.js"
