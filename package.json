@@ -1,0 +1,59 @@
+{
+  "name": "create-clerk",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.2.1",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/octoper/clerk-create",
+  "bugs": {
+    "url": "https://github.com/octoper/clerk-create/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/octoper/clerk-create.git"
+  },
+  "author": "Vaggelis Yfantis <hey@octoper.me>",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "create-clerk": "index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "eslint --cache .",
+    "lint:fix": "pnpm run lint --fix",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --cache --write .",
+    "start": "tsx ./src/index.ts",
+    "release": "bumpp && pnpm publish",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@sxzz/eslint-config": "^5.0.1",
+    "@sxzz/prettier-config": "^2.1.2",
+    "@types/node": "^22.13.1",
+    "@types/prompts": "^2.4.9",
+    "bumpp": "^10.0.2",
+    "eslint": "^9.20.0",
+    "oxc-transform": "^0.48.2",
+    "prettier": "^3.5.0",
+    "tsdown": "^0.5.9",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "prettier": "@sxzz/prettier-config"
+}
