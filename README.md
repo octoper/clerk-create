@@ -26,6 +26,11 @@ With Bun:
 $ bun create clerk-app
 ```
 
+Currently supported template presets include:
+
+- `nextjs-app-router`
+- `nextjs-pages-router`
+
 ## Credits
 
 This project also contains code derived or copied from [https://github.com/vitejs/vite].
